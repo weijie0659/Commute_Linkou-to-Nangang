@@ -1,0 +1,365 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="通勤">
+<meta name="theme-color" content="#0f1720">
+<title>林口南港通勤</title>
+<style>
+:root{
+  --bg:#f3f4f1;--card:#ffffff;--ink:#14181d;--sub:#5d6670;--line:#e2e4df;
+  --mrt:#7a3fa6;--tra:#1f5fbf;--hsr:#e0661c;--ok:#1d8a4e;--warn:#c98a00;--bad:#c7392f;
+  --pick:#fff6d8;--chip:#eef0ec;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#0f1720;--card:#18222d;--ink:#eef1f4;--sub:#93a0ad;--line:#26323e;
+  --mrt:#b585df;--tra:#6ea3f2;--hsr:#f39a5e;--ok:#4cc386;--warn:#e7b53f;--bad:#f0756b;
+  --pick:#2d2a17;--chip:#223040;
+}}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--ink);font:16px/1.4 -apple-system,BlinkMacSystemFont,"PingFang TC","Noto Sans TC",sans-serif;
+  padding:calc(env(safe-area-inset-top) + 12px) 14px calc(env(safe-area-inset-bottom) + 28px);max-width:560px;margin:0 auto}
+header{display:flex;align-items:flex-end;justify-content:space-between;gap:8px;margin-bottom:12px}
+.clock{font-size:40px;font-weight:700;letter-spacing:-1px;font-variant-numeric:tabular-nums;line-height:1}
+.date{color:var(--sub);font-size:13px;margin-top:4px}
+.seg{display:flex;background:var(--chip);border-radius:10px;padding:3px}
+.seg button{border:0;background:none;color:var(--sub);font:inherit;font-size:14px;font-weight:600;padding:7px 12px;border-radius:8px}
+.seg button.on{background:var(--card);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.status{font-size:12px;color:var(--sub);margin:0 2px 10px;display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--sub);display:inline-block}
+.dot.live{background:var(--ok)}.dot.off{background:var(--warn)}
+.plan{background:var(--card);border-radius:16px;padding:14px 16px;margin-bottom:12px;border:1px solid var(--line)}
+.plan h2{font-size:13px;color:var(--sub);font-weight:600;margin-bottom:8px}
+.route{display:flex;flex-direction:column;gap:6px}
+.leg{display:flex;align-items:center;gap:10px;font-variant-numeric:tabular-nums}
+.tag{font-size:12px;font-weight:700;color:#fff;border-radius:6px;padding:2px 7px;min-width:42px;text-align:center}
+.t-mrt{background:var(--mrt)}.t-tra{background:var(--tra)}.t-hsr{background:var(--hsr)}.t-walk{background:var(--sub)}
+.leg b{font-size:18px}
+.leg .s{color:var(--sub);font-size:13px}
+.verdict{margin-top:10px;font-size:15px;font-weight:700}
+.verdict.ok{color:var(--ok)}.verdict.warn{color:var(--warn)}.verdict.bad{color:var(--bad)}
+section{background:var(--card);border-radius:16px;margin-bottom:12px;border:1px solid var(--line);overflow:hidden}
+section h3{display:flex;align-items:center;gap:8px;font-size:15px;padding:12px 16px 8px}
+section h3 .sub{color:var(--sub);font-weight:500;font-size:12px;margin-left:auto}
+.bar{width:4px;height:16px;border-radius:2px}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+th{font-size:11px;color:var(--sub);font-weight:600;text-align:left;padding:4px 16px 6px}
+td{padding:9px 16px;border-top:1px solid var(--line);font-size:15px;white-space:nowrap}
+td.n{color:var(--sub);font-size:13px}
+td.r{text-align:right}
+tr.pick td{background:var(--pick)}
+tr.gone td{opacity:.38}
+tr[data-i]{cursor:pointer}
+.mins{font-size:12px;color:var(--sub)}
+.late{color:var(--bad);font-weight:700;font-size:12px}
+.ontime{color:var(--ok);font-size:12px}
+.k{font-size:11px;border:1px solid var(--line);border-radius:4px;padding:0 4px;color:var(--sub);margin-left:4px}
+.more{display:block;width:100%;border:0;border-top:1px solid var(--line);background:none;color:var(--tra);font:inherit;font-size:14px;padding:10px}
+.note{font-size:12px;color:var(--sub);padding:4px 16px 12px}
+.banner{background:var(--pick);border-radius:12px;padding:10px 14px;font-size:13px;margin-bottom:12px}
+details{background:var(--card);border-radius:16px;border:1px solid var(--line);padding:12px 16px}
+summary{font-weight:600;font-size:15px;cursor:pointer}
+label{display:block;font-size:13px;color:var(--sub);margin:12px 0 4px}
+input{width:100%;font:inherit;font-size:16px;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+.row2{display:flex;gap:10px}.row2>div{flex:1}
+.btn{margin-top:14px;width:100%;font:inherit;font-weight:700;padding:11px;border:0;border-radius:10px;background:var(--ink);color:var(--bg)}
+.btn.ghost{background:var(--chip);color:var(--ink);margin-top:8px}
+.msg{font-size:13px;margin-top:8px;color:var(--sub)}
+</style>
+</head>
+<body>
+<header>
+  <div><div class="clock" id="clock">--:--</div><div class="date" id="date"></div></div>
+  <div class="seg"><button id="bAM">上班</button><button id="bPM">下班</button></div>
+</header>
+<div class="status"><span class="dot" id="dot"></span><span id="stxt">載入中</span></div>
+<div id="banner"></div>
+<div class="plan" id="plan"></div>
+<div id="lists"></div>
+<details id="set">
+  <summary>設定</summary>
+  <label>TDX Client Id</label><input id="cid" autocomplete="off" autocapitalize="off" spellcheck="false">
+  <label>TDX Client Secret</label><input id="csec" type="password" autocomplete="off">
+  <div class="row2">
+    <div><label>機捷 A1 ↔ 台鐵/高鐵 步行（分）</label><input id="walk" type="number" inputmode="numeric"></div>
+    <div><label>南港車站月台 ↔ 辦公室（分）</label><input id="exit" type="number" inputmode="numeric"></div>
+  </div>
+  <div class="row2">
+    <div><label>上班要到辦公室的時間</label><input id="target" type="time"></div>
+    <div><label>幾點後自動切到下班</label><input id="switch" type="time"></div>
+  </div>
+  <button class="btn" id="save">儲存</button>
+  <button class="btn ghost" id="clear">清除金鑰</button>
+  <div class="msg" id="setmsg">金鑰只存在這支手機的瀏覽器裡，不會上傳到任何地方（除了 TDX 官方換 token）。</div>
+</details>
+
+<script>
+const FB = {"asOf":"2026-11-04","mrtAM":[["06:06","06:41"],["06:21","06:56"],["06:36","07:11"],["06:51","07:26"],["07:06","07:41"],["07:15","07:45"],["07:21","07:56"],["07:30","08:00"],["07:36","08:07"],["07:40","08:11"],["07:45","08:15"],["07:51","08:26"],["08:00","08:30"],["08:06","08:41"],["08:21","08:56"],["08:36","09:11"],["08:51","09:26"],["09:06","09:41"],["09:21","09:56"],["09:36","10:11"],["09:51","10:26"],["10:06","10:41"],["10:21","10:56"],["10:36","11:11"],["10:51","11:26"],["11:06","11:41"],["11:21","11:56"],["11:36","12:11"],["11:51","12:26"],["12:06","12:41"],["12:21","12:56"],["12:36","13:11"],["12:51","13:26"],["13:06","13:41"],["13:21","13:56"],["13:36","14:11"],["13:51","14:26"],["14:06","14:41"],["14:21","14:56"],["14:36","15:11"],["14:51","15:26"],["15:06","15:41"],["15:21","15:56"],["15:36","16:11"],["15:51","16:26"],["16:06","16:41"],["16:21","16:56"],["16:36","17:11"],["16:51","17:26"],["17:06","17:41"],["17:21","17:56"],["17:36","18:11"],["17:51","18:26"],["18:00","18:30"],["18:06","18:41"],["18:21","18:56"],["18:36","19:11"],["18:51","19:26"],["19:06","19:41"],["19:21","19:56"],["19:36","20:11"],["19:51","20:26"],["20:06","20:41"],["20:21","20:56"],["20:36","21:11"],["20:51","21:26"],["21:06","21:41"],["21:21","21:56"],["21:36","22:11"],["21:51","22:26"],["22:08","22:42"],["22:23","22:57"],["22:38","23:13"],["22:54","23:29"],["23:09","23:44"],["23:24","23:56"],["23:39","00:11"],["23:54","00:26"]],"mrtPM":[["06:08","06:41"],["06:23","06:56"],["06:38","07:11"],["06:53","07:26"],["07:08","07:41"],["07:23","07:56"],["07:38","08:11"],["07:53","08:26"],["08:08","08:41"],["08:23","08:56"],["08:38","09:11"],["08:53","09:26"],["09:08","09:41"],["09:23","09:56"],["09:38","10:11"],["09:53","10:26"],["10:08","10:41"],["10:23","10:56"],["10:38","11:11"],["10:53","11:26"],["11:08","11:41"],["11:23","11:56"],["11:38","12:11"],["11:53","12:26"],["12:08","12:41"],["12:23","12:56"],["12:38","13:11"],["12:53","13:26"],["13:08","13:41"],["13:23","13:56"],["13:38","14:11"],["13:53","14:26"],["14:08","14:41"],["14:23","14:56"],["14:38","15:11"],["14:53","15:26"],["15:08","15:41"],["15:23","15:56"],["15:38","16:11"],["15:53","16:26"],["16:08","16:41"],["16:23","16:56"],["16:38","17:11"],["16:53","17:26"],["17:08","17:41"],["17:23","17:56"],["17:38","18:11"],["17:53","18:26"],["18:04","18:32"],["18:08","18:41"],["18:19","18:47"],["18:23","18:56"],["18:34","19:02"],["18:38","19:11"],["18:53","19:26"],["19:08","19:41"],["19:23","19:56"],["19:38","20:11"],["19:53","20:26"],["20:08","20:41"],["20:23","20:56"],["20:38","21:11"],["20:53","21:26"],["21:08","21:41"],["21:23","21:56"],["21:38","22:11"],["21:53","22:26"],["22:08","22:41"],["22:23","22:56"],["22:38","23:11"],["22:53","23:26"],["23:08","23:39"],["23:23","23:54"],["23:38","00:09"]],"traAM":[["05:26","05:36","4128","L"],["05:45","05:55","1106","L"],["06:09","06:19","4138","L"],["06:25","06:35","4006","F"],["06:39","06:49","1112","L"],["06:44","06:54","4144","L"],["06:59","07:09","1120","L"],["07:12","07:22","1122","L"],["07:29","07:39","1124","L"],["07:34","07:44","4148","L"],["07:41","07:51","1128","L"],["07:50","08:00","4152","L"],["08:00","08:10","1132","L"],["08:09","08:20","1130","L"],["08:15","08:25","4154","L"],["08:24","08:34","1008","F"],["08:29","08:39","1140","L"],["08:33","08:43","4022","F"],["08:38","08:48","1134","L"],["08:49","08:59","2114","L"],["08:59","09:09","1136","L"],["09:05","09:15","2008","F"],["09:16","09:26","1138","L"],["09:20","09:36","4162","L"],["09:36","09:46","1142","L"],["09:55","10:05","1148","L"],["10:05","10:15","4026","F"],["10:10","10:20","1154","L"],["10:24","10:34","1152","L"],["10:34","10:44","1158","L"],["10:48","10:58","4172","L"],["10:58","11:08","2134","L"],["11:14","11:24","1162","L"],["11:23","11:33","4178","L"],["11:40","11:50","1168","L"],["12:08","12:18","4030","F"],["12:17","12:27","1174","L"],["12:22","12:32","1170","L"],["12:27","12:37","1172","L"],["12:34","12:44","4182","L"],["12:46","12:56","1178","L"],["12:52","13:02","1166","L"],["12:58","13:08","2154","L"],["13:27","13:37","1182","L"],["13:34","13:44","4188","L"],["13:41","13:51","1188","L"],["14:02","14:12","1194","L"],["14:23","14:33","1192","L"],["14:35","14:45","4198","L"],["14:42","14:52","1198","L"],["14:50","15:00","4032","F"],["15:10","15:20","2174","L"],["15:17","15:27","1202","L"],["15:30","15:40","4208","L"],["15:38","15:48","1208","L"],["16:07","16:17","1214","L"],["16:26","16:36","1212","L"],["16:33","16:43","4216","L"],["16:45","16:55","1218","L"],["17:00","17:10","2194","L"],["17:19","17:29","1222","L"],["17:25","17:35","4224","L"],["17:35","17:45","1228","L"],["17:44","17:54","1226","L"],["17:49","17:59","4232","L"],["18:05","18:15","1234","L"],["18:10","18:20","4234","L"],["18:25","18:35","1232","L"],["18:45","18:55","1238","L"],["18:50","19:00","4236","L"],["19:00","19:10","4046","F"],["19:10","19:20","2214","L"],["19:20","19:30","1036","F"],["19:35","19:45","1242","L"],["19:50","20:00","4240","L"],["19:55","20:05","1248","L"],["20:09","20:19","1254","L"],["20:15","20:25","4048","F"],["20:20","20:30","1252","L"],["20:29","20:39","1258","L"],["20:45","20:55","2042","F"],["20:50","21:00","4244","L"],["20:55","21:05","1262","L"],["21:25","21:35","2234","L"],["21:30","21:40","4248","L"],["21:35","21:45","1038","F"],["21:40","21:50","1268","L"],["21:56","22:06","1274","L"],["22:07","22:17","4252","L"],["22:17","22:27","1276","L"],["22:35","22:45","1272","L"],["22:45","22:55","1278","L"],["23:04","23:14","1280","L"],["23:11","23:21","2254","L"],["23:17","23:27","2046","F"],["23:35","23:46","1282","L"],["23:47","23:57","1288","L"],["23:52","00:02","1048","F"]],"traPM":[["05:11","05:22","2005","F"],["05:19","05:31","1107","L"],["05:31","05:43","2133","L"],["05:57","06:09","1117","L"],["06:21","06:33","1123","L"],["06:32","06:44","4103","L"],["06:50","07:02","1121","L"],["06:55","07:07","1007","F"],["07:04","07:16","4107","L"],["07:09","07:21","2007","F"],["07:14","07:26","1127","L"],["07:20","07:32","1129","L"],["07:30","07:42","2153","L"],["07:37","07:49","4003","F"],["07:46","07:59","1131","L"],["07:51","08:04","4111","L"],["07:56","08:14","1135","L"],["08:17","08:29","1137","L"],["08:23","08:35","4113","L"],["08:29","08:41","1143","L"],["08:34","08:52","4007","F"],["08:51","09:03","1141","L"],["08:56","09:08","4119","L"],["09:03","09:15","4013","F"],["09:14","09:26","1147","L"],["09:30","09:42","2173","L"],["09:35","09:47","4123","L"],["09:51","10:03","1151","L"],["10:08","10:20","1157","L"],["10:19","10:31","4131","L"],["10:30","10:42","1163","L"],["10:35","10:47","4017","F"],["10:51","11:03","1161","L"],["10:56","11:08","4135","L"],["11:10","11:22","1167","L"],["11:31","11:43","2193","L"],["11:36","11:48","4137","L"],["11:50","12:02","1171","L"],["11:55","12:07","4019","F"],["12:04","12:16","1177","L"],["12:20","12:32","1183","L"],["12:33","12:46","1181","L"],["12:47","12:59","4151","L"],["13:02","13:14","1187","L"],["13:23","13:35","2213","L"],["13:50","14:02","1191","L"],["13:55","14:07","4171","L"],["14:08","14:20","1197","L"],["14:29","14:41","1203","L"],["14:35","14:47","4173","L"],["14:51","15:03","1201","L"],["15:10","15:22","1207","L"],["15:18","15:30","4177","L"],["15:25","15:37","2233","L"],["15:51","16:03","1211","L"],["15:58","16:10","1217","L"],["16:12","16:24","4183","L"],["16:26","16:38","1221","L"],["16:35","16:47","1025","F"],["16:50","17:02","1223","L"],["16:58","17:10","1227","L"],["17:08","17:20","2033","F"],["17:17","17:29","1231","L"],["17:31","17:43","4191","L"],["17:36","17:48","2253","L"],["17:49","18:01","1239","L"],["18:01","18:13","1235","L"],["18:06","18:18","4193","L"],["18:11","18:23","2037","F"],["18:16","18:28","4027","F"],["18:21","18:33","1237","L"],["18:33","18:45","1243","L"],["18:41","18:53","4197","L"],["18:50","19:02","1241","L"],["19:08","19:20","1247","L"],["19:31","19:43","1251","L"],["19:49","20:01","2273","L"],["19:59","20:11","4209","L"],["20:13","20:25","1257","L"],["20:19","20:31","4211","L"],["20:26","20:38","1261","L"],["20:44","20:56","4215","L"],["20:50","21:02","1263","L"],["21:01","21:13","4221","L"],["21:12","21:24","1267","L"],["21:36","21:48","1273","L"],["21:45","21:57","4225","L"],["22:01","22:13","1271","L"],["22:14","22:26","4235","L"],["22:26","22:38","1281","L"],["22:40","22:52","4037","F"],["22:50","23:02","1283","L"],["23:11","23:23","4241","L"],["23:16","23:28","1287","L"],["23:41","23:53","1289","L"],["23:57","00:08","4041","F"]],"hsrAM":[["07:12","07:20","0502"],["07:37","07:45","1504"],["07:47","07:55","0300"],["08:01","08:10","0508"],["08:07","08:15","1202"],["08:21","08:30","1510"],["08:32","08:40","0802"],["08:37","08:45","0204"],["08:42","08:50","1602"],["08:47","08:55","1302"],["08:57","09:05","0206"],["09:02","09:10","0606"],["09:16","09:25","1514"],["09:32","09:40","0108"],["09:36","09:45","0610"],["09:42","09:50","0806"],["10:02","10:10","0612"],["10:32","10:40","0112"],["10:36","10:45","0616"],["10:42","10:50","0810"],["11:02","11:10","0618"],["11:32","11:40","0116"],["11:36","11:45","0622"],["11:42","11:50","0814"],["12:02","12:10","0624"],["12:32","12:40","0120"],["12:36","12:45","0628"],["12:42","12:50","0818"],["13:02","13:10","0630"],["13:32","13:40","0124"],["13:42","13:50","0822"],["14:02","14:10","0636"],["14:32","14:40","0128"],["14:36","14:45","0640"],["14:42","14:50","0826"],["15:02","15:10","0642"],["15:32","15:40","0132"],["15:36","15:45","0646"],["15:42","15:50","0830"],["16:02","16:10","0648"],["16:32","16:40","0136"],["16:36","16:45","0652"],["16:42","16:50","0834"],["16:57","17:05","1238"],["17:02","17:10","0654"],["17:32","17:40","0140"],["17:36","17:45","0658"],["17:42","17:50","0838"],["17:57","18:05","0242"],["18:02","18:10","0660"],["18:16","18:25","1550"],["18:32","18:40","0144"],["18:36","18:45","0664"],["18:42","18:50","0842"],["18:47","18:55","1322"],["18:57","19:05","1246"],["19:02","19:10","0666"],["19:32","19:40","0148"],["19:36","19:45","0670"],["19:42","19:50","0846"],["20:02","20:10","0672"],["20:32","20:40","0152"],["20:36","20:45","0676"],["20:42","20:50","0850"],["21:02","21:10","0678"],["21:32","21:40","0156"],["21:42","21:50","0854"],["22:02","22:10","0684"],["22:32","22:40","0160"],["22:42","22:50","0858"],["23:07","23:15","0690"],["23:47","23:55","0862"],["23:52","23:59","0294"]],"hsrPM":[["06:15","06:23","0803"],["06:40","06:48","0603"],["07:00","07:08","0805"],["07:20","07:28","0109"],["07:25","07:33","1505"],["07:35","07:43","0609"],["07:40","07:48","0205"],["07:50","07:58","1305"],["08:00","08:08","0809"],["08:10","08:18","0613"],["08:20","08:28","0207"],["08:35","08:43","0615"],["08:50","08:58","1307"],["09:00","09:08","0813"],["09:10","09:18","0619"],["09:20","09:28","0117"],["09:35","09:43","0621"],["10:00","10:08","0817"],["10:10","10:18","0625"],["10:20","10:28","0121"],["10:35","10:43","0627"],["11:00","11:08","0821"],["11:20","11:28","0125"],["11:35","11:43","0633"],["12:00","12:08","0825"],["12:10","12:18","0637"],["12:20","12:28","0129"],["12:35","12:43","0639"],["13:00","13:08","0829"],["13:10","13:18","0643"],["13:20","13:28","0133"],["13:35","13:43","0645"],["14:00","14:08","0833"],["14:10","14:18","0649"],["14:20","14:28","0137"],["14:35","14:43","0651"],["15:00","15:08","0837"],["15:10","15:18","0655"],["15:20","15:28","0141"],["15:35","15:43","0657"],["15:50","15:58","1321"],["16:00","16:08","0841"],["16:10","16:18","0661"],["16:20","16:28","0145"],["16:35","16:43","0663"],["16:40","16:48","1241"],["17:00","17:08","0845"],["17:10","17:18","0667"],["17:20","17:28","0149"],["17:35","17:43","0669"],["17:45","17:53","1547"],["18:00","18:08","0849"],["18:10","18:18","0673"],["18:20","18:28","0153"],["18:25","18:33","1549"],["18:35","18:43","0675"],["18:40","18:48","0249"],["19:00","19:08","0853"],["19:10","19:18","0679"],["19:20","19:28","0157"],["19:35","19:43","0681"],["20:00","20:08","0857"],["20:20","20:28","0161"],["20:35","20:43","0687"],["21:00","21:08","0861"],["21:20","21:28","0165"],["21:30","21:38","0693"],["21:45","21:53","0333"],["22:00","22:07","1985"],["22:05","22:13","0295"],["22:15","22:23","0565"],["22:50","22:57","0567"]]};
+const TDX = 'https://tdx.transportdata.tw';
+const ST = {TPE_TRA:'1000', NG_TRA:'0980', TPE_HSR:'1000', NG_HSR:'0990'};
+const $ = id => document.getElementById(id);
+
+/* ---------- storage ---------- */
+const store = {
+  get(k, d){ try{ const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); }catch(e){ return d; } },
+  set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} },
+  del(k){ try{ localStorage.removeItem(k); }catch(e){} }
+};
+const cfg = Object.assign({walk:12, exit:10, target:'09:00', switch:'13:30'}, store.get('cfg', {}));
+const cred = store.get('cred', null);
+
+/* ---------- time helpers (Asia/Taipei) ---------- */
+function nowTPE(){
+  const p = new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Taipei',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',weekday:'short',hourCycle:'h23'})
+    .formatToParts(new Date()).reduce((o,x)=>(o[x.type]=x.value,o),{});
+  return {date:`${p.year}-${p.month}-${p.day}`, min:+p.hour*60 + +p.minute, sec:+p.second, wd:p.weekday, hm:`${p.hour}:${p.minute}`};
+}
+const toMin = s => { const [h,m] = s.split(':').map(Number); return h*60+m; };
+const fmt = m => { m = ((m%1440)+1440)%1440; return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0'); };
+// arrival after midnight => +1440
+function span(dep, arr){ let a = toMin(arr), d = toMin(dep); if (a < d) a += 1440; return [d, a]; }
+
+// best train you can still board at `ready` (minutes), counting live delays
+function bestCatch(list, ready, useDelay){
+  let best = -1, bestArr = Infinity;
+  list.forEach((r, i) => {
+    const d = useDelay ? (delays[r.no] || 0) : 0;
+    if (r.dep + d >= ready && r.dep <= ready + 60 && r.arr + d < bestArr){ best = i; bestArr = r.arr + d; }
+  });
+  return best < 0 ? list.length : best;
+}
+
+/* ---------- normalise rows: {dep, arr, no, kind} in minutes ---------- */
+function rowsMRT(list){ return list.map(([d,a]) => { const [dm,am] = span(d,a); return {dep:dm, arr:am}; }); }
+function rowsTRA(list){ return list.map(([d,a,no,k]) => { const [dm,am] = span(d,a); return {dep:dm, arr:am, no, kind:k==='F'?'區間快':'區間'}; }); }
+function rowsHSR(list){ return list.map(([d,a,no]) => { const [dm,am] = span(d,a); return {dep:dm, arr:am, no}; }); }
+
+let data = {
+  mrtAM: rowsMRT(FB.mrtAM), mrtPM: rowsMRT(FB.mrtPM),
+  traAM: rowsTRA(FB.traAM), traPM: rowsTRA(FB.traPM),
+  hsrAM: rowsHSR(FB.hsrAM), hsrPM: rowsHSR(FB.hsrPM)
+};
+let delays = {};          // TRA train no -> minutes late
+let live = {ok:false, msg:'使用內建時刻表', at:null};
+let mode = null;          // 'AM' | 'PM'
+let pickedIdx = null;     // index of chosen first-leg train
+let expand = {};
+
+/* ---------- TDX ---------- */
+let tokPending = null;
+function token(){
+  if (!cred) return Promise.resolve(null);
+  const c = store.get('tok', null);
+  if (c && c.exp > Date.now() + 60000) return Promise.resolve(c.t);
+  if (!tokPending) tokPending = fetchToken().finally(() => { tokPending = null; });
+  return tokPending;
+}
+async function fetchToken(){
+  const r = await fetch(TDX + '/auth/realms/TDXConnect/protocol/openid-connect/token', {
+    method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'},
+    body:new URLSearchParams({grant_type:'client_credentials', client_id:cred.id, client_secret:cred.secret})
+  });
+  if (!r.ok) throw new Error(r.status === 400 || r.status === 401 ? '金鑰錯誤' : 'token ' + r.status);
+  const j = await r.json();
+  store.set('tok', {t:j.access_token, exp:Date.now() + (j.expires_in||86400)*1000});
+  return j.access_token;
+}
+async function api(path){
+  const t = await token();
+  const r = await fetch(TDX + '/api/basic' + path + (path.includes('?')?'&':'?') + '$format=JSON', {headers:{authorization:'Bearer ' + t}});
+  if (r.status === 401) { store.del('tok'); throw new Error('token 失效'); }
+  if (!r.ok) throw new Error('TDX ' + r.status);
+  return r.json();
+}
+async function loadDaily(date){
+  const cache = store.get('daily', null);
+  if (cache && cache.date === date) return cache;
+  const tra = async (o,d) => (await api(`/v3/Rail/TRA/DailyTrainTimetable/OD/${o}/to/${d}/${date}`)).TrainTimetables
+      .filter(x => ['6','10'].includes(x.TrainInfo.TrainTypeCode))
+      .map(x => [x.StopTimes[0].DepartureTime, x.StopTimes[1].ArrivalTime, x.TrainInfo.TrainNo, x.TrainInfo.TrainTypeCode==='10'?'F':'L'])
+      .sort((a,b) => a[0] < b[0] ? -1 : 1);
+  const hsr = async (o,d) => (await api(`/v2/Rail/THSR/DailyTimetable/OD/${o}/to/${d}/${date}`))
+      .map(x => [x.OriginStopTime.DepartureTime, x.DestinationStopTime.ArrivalTime, x.DailyTrainInfo.TrainNo])
+      .sort((a,b) => a[0] < b[0] ? -1 : 1);
+  const [ta, tp, ha, hp] = await Promise.all([tra(ST.TPE_TRA,ST.NG_TRA), tra(ST.NG_TRA,ST.TPE_TRA), hsr(ST.TPE_HSR,ST.NG_HSR), hsr(ST.NG_HSR,ST.TPE_HSR)]);
+  const out = {date, traAM:ta, traPM:tp, hsrAM:ha, hsrPM:hp};
+  store.set('daily', out);
+  return out;
+}
+async function loadDelays(nos){
+  if (!nos.length) return;
+  const f = encodeURIComponent(nos.map(n => `TrainNo eq '${n}'`).join(' or '));
+  const j = await api(`/v2/Rail/TRA/LiveTrainDelay?$filter=${f}`);
+  const d = {}; j.forEach(x => d[x.TrainNo] = x.DelayTime);
+  nos.forEach(n => { delays[n] = d[n] ?? 0; });
+}
+async function refresh(){
+  if (!cred){ live = {ok:false, msg:'使用內建時刻表（設定 TDX 金鑰可看台鐵誤點）'}; render(); return; }
+  try{
+    const n = nowTPE();
+    const d = await loadDaily(n.date);
+    data.traAM = rowsTRA(d.traAM); data.traPM = rowsTRA(d.traPM);
+    data.hsrAM = rowsHSR(d.hsrAM); data.hsrPM = rowsHSR(d.hsrPM);
+    const traList = mode === 'AM' ? data.traAM : data.traPM;
+    const upcoming = traList.filter(r => r.dep >= n.min - 5).slice(0, 10).map(r => r.no);
+    await loadDelays(upcoming);
+    live = {ok:true, msg:'TDX 即時連線中', at:n.hm};
+  }catch(e){
+    live = {ok:false, msg:'TDX 連線失敗（' + e.message + '），改用內建時刻表'};
+  }
+  render();
+}
+
+/* ---------- rendering ---------- */
+function minsFrom(now, t){ const d = t - now; return d < 0 ? '已發車' : d === 0 ? '即將發車' : d < 60 ? d + ' 分後' : ''; }
+function delayCell(no){
+  if (!live.ok) return '';
+  const d = delays[no];
+  if (d === undefined) return '';
+  return d > 0 ? `<span class="late">晚 ${d} 分</span>` : '<span class="ontime">準點</span>';
+}
+function firstIdx(list, t){ const i = list.findIndex(r => r.dep >= t); return i < 0 ? list.length : i; }
+
+function render(){
+  const n = nowTPE();
+  const now = n.min;
+  $('clock').textContent = n.hm;
+  const wdZh = {Mon:'一',Tue:'二',Wed:'三',Thu:'四',Fri:'五',Sat:'六',Sun:'日'}[n.wd];
+  $('date').textContent = `${n.date.slice(5).replace('-','/')}（${wdZh}）`;
+  $('bAM').classList.toggle('on', mode==='AM'); $('bPM').classList.toggle('on', mode==='PM');
+  $('dot').className = 'dot ' + (live.ok ? 'live' : 'off');
+  $('stxt').textContent = live.msg + (live.ok && live.at ? `・${live.at} 更新` : '');
+  $('banner').innerHTML = (n.wd === 'Sat' || n.wd === 'Sun')
+    ? '<div class="banner">今天是假日，機捷顯示的是平日班次，僅供參考。</div>' : '';
+
+  const walk = +cfg.walk, exit = +cfg.exit;
+  const AM = mode === 'AM';
+  let html = '', plan = '';
+
+  if (AM){
+    const mrt = data.mrtAM;
+    const start = firstIdx(mrt, now);
+    if (pickedIdx === null || pickedIdx < start) pickedIdx = Math.min(start, mrt.length-1);
+    const m = mrt[pickedIdx];
+    const ready = m ? m.arr + walk : 9999;
+    const tra = data.traAM, hsr = data.hsrAM;
+    const ti = bestCatch(tra, ready, live.ok), hi = firstIdx(hsr, ready);
+    const tBest = tra[ti], hBest = hsr[hi];
+    const tg = toMin(cfg.target);
+    const legOpt = (r, cls, label) => {
+      if (!r) return '';
+      const d = cls === 'tra' ? (delays[r.no] || 0) : 0;
+      const end = r.arr + d + exit;
+      const v = end <= tg - 3 ? 'ok' : end <= tg ? 'warn' : 'bad';
+      return `<div class="leg"><span class="tag t-${cls}">${label}</span><b>${fmt(r.dep)}</b><span class="s">→ ${fmt(r.arr)}${d?`（晚 ${d}）`:''}・${r.no}</span>
+        <span class="s" style="margin-left:auto">辦公室 <b style="font-size:15px" class="verdict ${v}">${fmt(end)}</b></span></div>`;
+    };
+    plan = m ? `<h2>你點選的機捷班次，最快的轉乘方式</h2><div class="route">
+      <div class="leg"><span class="tag t-mrt">機捷</span><b>${fmt(m.dep)}</b><span class="s">A9 → A1 ${fmt(m.arr)}・${m.arr-m.dep} 分</span></div>
+      <div class="leg"><span class="tag t-walk">步行</span><span class="s">約 ${walk} 分，${fmt(ready)} 可上車</span></div>
+      ${legOpt(tBest,'tra','台鐵')}${legOpt(hBest,'hsr','高鐵')}</div>
+      <div class="verdict ${verdictCls(tBest,hBest)}">${verdictTxt(tBest,hBest)}</div>` : '<h2>今天的機捷已經收班</h2>';
+    function arrive(r, cls){ return r ? r.arr + (cls==='tra' ? (delays[r.no]||0) : 0) + exit : 9999; }
+    function verdictCls(t,h){ const b = Math.min(arrive(t,'tra'), arrive(h,'hsr')); return b <= tg-3 ? 'ok' : b <= tg ? 'warn' : 'bad'; }
+    function verdictTxt(t,h){ const b = Math.min(arrive(t,'tra'), arrive(h,'hsr')); const d = tg - b;
+      return d >= 0 ? `${cfg.target} 前到辦公室，還有 ${d} 分緩衝` : `會比 ${cfg.target} 晚 ${-d} 分`; }
+
+    html += listMRT('機捷 A9 林口 → A1 台北車站', mrt, start, now, true);
+    html += listTRA('台鐵 台北 → 南港（非對號・悠遊卡）', tra, Math.max(firstIdx(tra, now), ti - 1), now, ti);
+    html += listHSR('高鐵 台北 → 南港（自由座）', hsr, Math.max(firstIdx(hsr, now), hi - 1), now, hi);
+  } else {
+    const tra = data.traPM, hsr = data.hsrPM, mrt = data.mrtPM;
+    const atStn = now + exit;  // walk from office to the platform first
+    const ts = firstIdx(tra, atStn), hs = firstIdx(hsr, atStn);
+    const tIdx = bestCatch(tra, atStn, live.ok);
+    const t = tra[tIdx], h = hsr[hs];
+    const conn = (r, cls) => {
+      if (!r) return null;
+      const d = cls === 'tra' ? (delays[r.no]||0) : 0;
+      const ready = r.arr + d + walk;
+      const mi = firstIdx(mrt, ready);
+      return {r, d, ready, m: mrt[mi], mi};
+    };
+    const ct = conn(t,'tra'), ch = conn(h,'hsr');
+    const best = [ct, ch].filter(x => x && x.m).sort((a,b) => a.m.arr - b.m.arr)[0];
+    const line = (c, cls, label) => c ? `<div class="leg"><span class="tag t-${cls}">${label}</span><b>${fmt(c.r.dep)}</b><span class="s">→ ${fmt(c.r.arr)}${c.d?`（晚 ${c.d}）`:''}</span>
+      <span class="s" style="margin-left:auto">${c.m ? '接機捷 ' + fmt(c.m.dep) : '機捷已收班'}</span></div>` : '';
+    plan = `<h2>現在離開辦公室，最快回到林口</h2><div class="route"><div class="leg"><span class="tag t-walk">步行</span><span class="s">辦公室到月台約 ${exit} 分，${fmt(atStn)} 可上車</span></div>${line(ct,'tra','台鐵')}${line(ch,'hsr','高鐵')}
+      <div class="leg"><span class="tag t-walk">步行</span><span class="s">台北車站轉機捷約 ${walk} 分</span></div></div>
+      ${best ? `<div class="verdict ok">最快 ${fmt(best.m.arr)} 到 A9 林口（搭${best===ct?'台鐵':'高鐵'}）</div>` : '<div class="verdict bad">今天已經沒有可接的班次</div>'}`;
+    html += listTRA('台鐵 南港 → 台北（非對號・悠遊卡）', tra, ts, now, tIdx);
+    html += listHSR('高鐵 南港 → 台北（自由座）', hsr, hs, now, hs);
+    html += listMRT('機捷 A1 台北車站 → A9 林口', mrt, firstIdx(mrt, now), now, false, best ? best.mi : null);
+  }
+  $('plan').innerHTML = plan;
+  $('lists').innerHTML = html;
+  document.querySelectorAll('tr[data-i]').forEach(tr => tr.onclick = () => { pickedIdx = +tr.dataset.i; render(); });
+  document.querySelectorAll('.more').forEach(b => b.onclick = () => { expand[b.dataset.k] = !expand[b.dataset.k]; render(); });
+}
+
+function rowsSlice(list, start, key){
+  const n = expand[key] ? 30 : 6;
+  return list.slice(Math.max(0, start - 1), start + n).map((r, j) => ({r, i: Math.max(0, start-1) + j}));
+}
+function moreBtn(key){ return `<button class="more" data-k="${key}">${expand[key] ? '收合' : '顯示更多班次'}</button>`; }
+
+function listMRT(title, list, start, now, pickable, hi){
+  const key = 'mrt';
+  const rows = rowsSlice(list, start, key).map(({r,i}) => `
+    <tr ${pickable ? `data-i="${i}"` : ''} class="${r.dep < now ? 'gone' : ''} ${(pickable ? i === pickedIdx : i === hi) ? 'pick' : ''}">
+      <td><b>${fmt(r.dep)}</b></td><td>${fmt(r.arr)}</td><td class="n">${r.arr - r.dep} 分</td>
+      <td class="r mins">${minsFrom(now, r.dep)}</td></tr>`).join('');
+  return `<section><h3><span class="bar" style="background:var(--mrt)"></span>${title}<span class="sub">普通車</span></h3>
+    <table><tr><th>出發</th><th>抵達</th><th>車程</th><th></th></tr>${rows}</table>
+    ${pickable ? '<div class="note">點一班機捷，上方會算出接得上的台鐵和高鐵。</div>' : ''}${moreBtn(key)}</section>`;
+}
+function listTRA(title, list, start, now, hi){
+  const key = 'tra';
+  const rows = rowsSlice(list, start, key).map(({r,i}) => `
+    <tr class="${r.dep < now ? 'gone' : ''} ${i === hi ? 'pick' : ''}">
+      <td><b>${fmt(r.dep)}</b></td><td>${fmt(r.arr)}</td><td class="n">${r.kind} ${r.no}</td>
+      <td class="r">${delayCell(r.no) || `<span class="mins">${minsFrom(now, r.dep)}</span>`}</td></tr>`).join('');
+  return `<section><h3><span class="bar" style="background:var(--tra)"></span>${title}</h3>
+    <table><tr><th>出發</th><th>抵達</th><th>車次</th><th></th></tr>${rows}</table>${moreBtn(key)}</section>`;
+}
+function listHSR(title, list, start, now, hi){
+  const key = 'hsr';
+  const rows = rowsSlice(list, start, key).map(({r,i}) => `
+    <tr class="${r.dep < now ? 'gone' : ''} ${i === hi ? 'pick' : ''}">
+      <td><b>${fmt(r.dep)}</b></td><td>${fmt(r.arr)}</td><td class="n">${r.no}</td>
+      <td class="r mins">${minsFrom(now, r.dep)}</td></tr>`).join('');
+  return `<section><h3><span class="bar" style="background:var(--hsr)"></span>${title}<span class="sub">無即時誤點</span></h3>
+    <table><tr><th>出發</th><th>抵達</th><th>車次</th><th></th></tr>${rows}</table>${moreBtn(key)}</section>`;
+}
+
+/* ---------- mode & settings ---------- */
+function autoMode(){ return nowTPE().min < toMin(cfg.switch) ? 'AM' : 'PM'; }
+function setMode(m){ if (m !== mode){ mode = m; pickedIdx = null; expand = {}; render(); refresh(); } }
+$('bAM').onclick = () => setMode('AM');
+$('bPM').onclick = () => setMode('PM');
+
+$('cid').value = cred ? cred.id : '';
+$('csec').value = cred ? cred.secret : '';
+$('walk').value = cfg.walk; $('exit').value = cfg.exit; $('target').value = cfg.target; $('switch').value = cfg.switch;
+$('save').onclick = async () => {
+  Object.assign(cfg, {walk:+$('walk').value || 12, exit:+$('exit').value || 10, target:$('target').value || '09:00', switch:$('switch').value || '13:30'});
+  store.set('cfg', cfg);
+  const id = $('cid').value.trim(), sec = $('csec').value.trim();
+  if (id && sec){ store.set('cred', {id, secret:sec}); store.del('tok'); store.del('daily'); location.reload(); }
+  else { $('setmsg').textContent = '已儲存。'; render(); }
+};
+$('clear').onclick = () => { store.del('cred'); store.del('tok'); store.del('daily'); location.reload(); };
+
+mode = autoMode();
+render();
+refresh();
+setInterval(render, 15000);
+setInterval(() => { if (document.visibilityState === 'visible') refresh(); }, 60000);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible'){ render(); refresh(); } });
+</script>
+</body>
+</html>
